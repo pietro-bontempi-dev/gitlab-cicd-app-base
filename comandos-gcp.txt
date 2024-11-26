@@ -1,0 +1,46 @@
+# Autenticando no GCP
+gcloud auth login
+
+# Configurando o projeto
+gcloud config set project [PROJECT_ID]
+
+# Criando um cluster no Kubernetes
+gcloud container clusters create [CLUSTER_NAME] \
+  --zone [ZONE] \
+  --num-nodes 3 \
+  --machine-type e2-medium
+
+# Conectando ao cluster
+gcloud container clusters get-credentials [CLUSTER_NAME] --zone [ZONE]
+
+# Criando um arquivo de deployment.yaml
+cat <<EOF > deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: [DEPLOYMENT_NAME]
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: [APP_NAME]
+  template:
+    metadata:
+      labels:
+        app: [APP_NAME]
+    spec:
+      containers:
+      - name: [APP_NAME]
+        image: [CONTAINER_REGISTRY_IMAGE]:latest
+        ports:
+        - containerPort: 3000
+EOF
+
+# Aplicando o deployment
+kubectl apply -f deployment.yaml
+
+# Criando um Load Balancer
+kubectl expose deployment [DEPLOYMENT_NAME] --type=LoadBalancer --name=[SERVICE_NAME]
+
+# Verificando o status do Load Balancer
+kubectl get services
